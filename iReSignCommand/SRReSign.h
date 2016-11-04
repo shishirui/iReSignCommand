@@ -23,12 +23,12 @@
     NSString *workingPath;
     NSString *appName;
     NSString *fileName;
-    
+    NSString *unzipcPath;
+
     NSString *codesigningResult;
     NSString *verificationResult;
     
     NSString *provisioningPath;
-    NSString *resourceRulesPath;
     NSString *entitlementPath;
     NSString *bundleIDNew;
     NSString *certName;
@@ -36,13 +36,15 @@
     NSMutableArray *installedCertItems;
     NSTask *certTask;
     NSArray *getCertsResult;
-    
 }
 
 @property (nonatomic, strong) NSString *certName;
 @property (nonatomic, strong) NSString *originalIpaPath;
 @property (nonatomic, strong) NSString *outputIpaPath;
 @property (nonatomic, strong) NSString *workingPath;
+@property (nonatomic, strong) NSString *provisioningPath;
+@property (nonatomic, strong) NSString *entitlementPath;
+@property (nonatomic, strong) NSString *unzipcPath;
 
 - (void)checkUnzip:(NSTimer *)timer;
 - (void)doProvisioning;
