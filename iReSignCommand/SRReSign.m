@@ -29,8 +29,6 @@ static NSString *kiTunesMetadataFileName        = @"iTunesMetadata";
         bundleIDNew = @"";
         certName = @"";
         provisioningPath = @"";
-
-        [self setup];
     }
     
     return self;
@@ -86,6 +84,8 @@ static NSString *kiTunesMetadataFileName        = @"iTunesMetadata";
 
 - (void)resign
 {
+    [self setup];
+
     codesigningResult = nil;
     verificationResult = nil;
     

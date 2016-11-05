@@ -12,12 +12,11 @@
 int main(int argc, const char * argv[])
 {
     @autoreleasepool {
-        
-        if (argc != 4) {
+        if (argc != 7) {
             printf("Usage: iparesign <cret_name> <provisioning_path> <entitlement_path> <old_ipa_path> <output_ipa_path> <unzipc_path>\n");
             exit(1);
         }
-        
+                
         SRReSign *resign = [[SRReSign alloc] init];
         resign.certName = [NSString stringWithUTF8String:argv[1]];
         resign.provisioningPath = [NSString stringWithUTF8String:argv[2]];
