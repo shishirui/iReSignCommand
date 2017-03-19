@@ -19,7 +19,7 @@ static NSString *kiTunesMetadataFileName        = @"iTunesMetadata";
 
 @implementation SRReSign
 
-@synthesize workingPath, certName, originalIpaPath, outputIpaPath;
+@synthesize workingPath, certName, originalIpaPath, outputIpaPath, provisioningPath, entitlementPath, unzipcPath;
 
 - (id)init
 {
@@ -28,19 +28,7 @@ static NSString *kiTunesMetadataFileName        = @"iTunesMetadata";
         entitlementPath = @"entitlements.plist";
         bundleIDNew = @"";
         certName = @"";
-        
-        NSString *currentpath = [[NSFileManager defaultManager] currentDirectoryPath];
-        provisioningPath = [currentpath stringByAppendingPathComponent:@"embedded.mobileprovision"];
-        if (![[NSFileManager defaultManager] fileExistsAtPath:provisioningPath]) {
-            [self _logErrorWithTitle:@"Can not find embedded.mobileprovision at:" AndMessage:provisioningPath];
-        }
-        
-        resourceRulesPath = [currentpath stringByAppendingPathComponent:@"ResourceRules.plist"];
-        if (![[NSFileManager defaultManager] fileExistsAtPath:resourceRulesPath]) {
-            [self _logErrorWithTitle:@"Can not find ResourceRules.plist at:" AndMessage:resourceRulesPath];
-        }
-        
-        [self setup];
+        provisioningPath = @"";
     }
     
     return self;
@@ -50,20 +38,28 @@ static NSString *kiTunesMetadataFileName        = @"iTunesMetadata";
 {    
     defaults = [NSUserDefaults standardUserDefaults];
     
-    // Look up available signing certificates
-    [self getCerts];
+    if (!provisioningPath || [provisioningPath isEqualToString:@""]) {
+        [self _logErrorWithTitle:@"Error" AndMessage:@"mobileprovisionPath do not provided."];
+    }
+    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:provisioningPath]) {
+        [self _logErrorWithTitle:@"Can not find mobileprovision at:" AndMessage:provisioningPath];
+    }
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/zip"]) {
         [self _logErrorWithTitle:@"Error" AndMessage:@"This app cannot run without the zip utility present at /usr/bin/zip"];
     }
-    if (![[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/unzip"]) {
-        [self _logErrorWithTitle:@"Error" AndMessage:@"This app cannot run without the unzip utility present at /usr/bin/unzip"];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:unzipcPath]) {
+        [self _logErrorWithTitle:@"Error" AndMessage:@"This app cannot run without the unzipc utility present at unzipcPath"];
     }
     if (![[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/codesign"]) {
         [self _logErrorWithTitle:@"Error" AndMessage:@"This app cannot run without the codesign utility present at /usr/bin/codesign"];
     }
-}
+    
+    // Look up available signing certificates
+    [self getCerts];
 
+}
 
 - (NSString *)randomString:(NSInteger)lenght
 {
@@ -88,6 +84,8 @@ static NSString *kiTunesMetadataFileName        = @"iTunesMetadata";
 
 - (void)resign
 {
+    [self setup];
+
     codesigningResult = nil;
     verificationResult = nil;
     
@@ -113,7 +111,7 @@ static NSString *kiTunesMetadataFileName        = @"iTunesMetadata";
 //            [unzipTask setLaunchPath:@"/usr/bin/unzip"];
 //            [unzipTask setArguments:[NSArray arrayWithObjects:@"-q", originalIpaPath, @"-d", workingPath, nil]];
             // 因为unzip在解压中文文件名时，会乱码，所以，这里用我们自己的unzipc程序去替代
-            [unzipTask setLaunchPath:@"/usr/bin/unzipc"];
+            [unzipTask setLaunchPath:unzipcPath];
             [unzipTask setArguments:[NSArray arrayWithObjects:originalIpaPath, workingPath, nil]];
 
             [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(checkUnzip:) userInfo:nil repeats:TRUE];
@@ -355,6 +353,7 @@ static NSString *kiTunesMetadataFileName        = @"iTunesMetadata";
              To ensure it is added, append the resource flag to the arguments.
              */
             
+            NSString *resourceRulesPath = [[NSBundle mainBundle] pathForResource:@"ResourceRules" ofType:@"plist"];
             NSString *resourceRulesArgument = [NSString stringWithFormat:@"--resource-rules=%@",resourceRulesPath];
             [arguments addObject:resourceRulesArgument];
         } else {
